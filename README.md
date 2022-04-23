@@ -5,3 +5,5 @@ Packages needed are tensorflow, keras and gym.
 
 In order to train a model, agent.train() trains your model. 
 In order to make the model play, agent.test() tests your model. 
+
+The saved model is SpaceInvadersModel.h5 for anybody who wishes to skip the training. 
