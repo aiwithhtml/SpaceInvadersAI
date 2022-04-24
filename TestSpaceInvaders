@@ -26,7 +26,6 @@ def OurModel(input_shape, action_space):
 class DQNAgent:
     def __init__(self):
         self.env = gym.make('SpaceInvaders-v0')
-        # by default, CartPole-v1 has max episode steps = 500
         self.state_size = self.env.observation_space.shape
         self.action_size = self.env.action_space.n
         self.EPISODES = 10000000
