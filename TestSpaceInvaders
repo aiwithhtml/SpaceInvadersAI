@@ -6,10 +6,9 @@ import numpy as np
 from collections import deque
 from keras.models import load_model, Sequential
 from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 def OurModel(input_shape, action_space):
-    env = gym.make('SpaceInvaders-v0')
+    env = gym.make('ALE/SpaceInvaders-v5')
     input_shape = env.observation_space.shape
     action_space = env.action_space.n
 
@@ -20,12 +19,12 @@ def OurModel(input_shape, action_space):
     model.add(Dense(64, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(action_space, activation="linear", kernel_initializer='he_uniform'))
 
-    model.compile(loss = "mse",optimizer=Adam(learning_rate=0.00025,  epsilon=0.01), metrics=["accuracy"])
+    model.compile(loss = "mse",optimizer='Adam'(learning_rate=1e-3,  epsilon=0.01), metrics=["accuracy"])
     return model
 
 class DQNAgent:
     def __init__(self):
-        self.env = gym.make('SpaceInvaders-v0')
+        self.env = gym.make('ALE/SpaceInvaders-v5', render_mode = 'human')
         self.state_size = self.env.observation_space.shape
         self.action_size = self.env.action_space.n
         self.EPISODES = 10000000
@@ -106,7 +105,6 @@ class DQNAgent:
             done = False
             i = 0
             while not done:
-                self.env.render()
                 action = self.env.action_space.sample()
                 next_state, reward, done, info = self.env.step(action)
                 next_state = np.reshape(next_state, [210, 160, 3])
@@ -119,16 +117,16 @@ class DQNAgent:
                 i += 1
                 if done:                   
                     print("episode: {}/{}, score: {}, e: {:.2}".format(e, self.EPISODES, i, self.epsilon))
-                    if i == 100:
-                        print("Saving trained model as spaceinvaders.h5")
-                        self.save("spaceinvaders.h5")
+                    if i >= 1000:
+                        print("Saving trained model as SpaceInvadersModel.h5")
+                        self.save("SpaceInvadersModel.h5")
                     break
                 self.replay()
                 
                 
 
     def test(self):
-        self.load("spaceinvaders.h5")
+        self.load("SpaceInvadersModel.h5")
         for e in range(self.EPISODES):
             state = self.env.reset()
             state = np.reshape(state, [210,160,3])
@@ -147,4 +145,4 @@ class DQNAgent:
 if __name__ == "__main__":
     agent = DQNAgent()
     agent.train()
-    #agent.test()
+    agent.test()
