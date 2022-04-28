@@ -101,7 +101,7 @@ class DQNAgent:
         self.model = load_model(name)
 
     def save(self, name):
-        self.model.save(name)
+        self.model.save_weights(name)
             
     def train(self):
         for e in range(self.EPISODES):
