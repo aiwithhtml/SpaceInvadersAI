@@ -97,8 +97,8 @@ class DQNAgent:
         # Train the Neural Network with batches
         self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
 
-    def save(filepath):
-        save_model(filepath)
+    def save(self, name):
+        save_model(name)
 
     def train(self):
         for e in range(self.EPISODES):
@@ -120,7 +120,7 @@ class DQNAgent:
                 if done:                   
                     print("episode: {}/{}, score: {}, e: {:.2}".format(e, self.EPISODES, i, self.epsilon))
                     if i >= 100:
-                        self.save('SpaceInvadersModel.h5')
+                        self.save('./SpaceInvadersModel')
                     break
                 self.replay()
                 
