@@ -17,12 +17,10 @@ def OurModel(input_shape, action_space):
     action_space = env.action_space.n
 
     model = Sequential()
-
     model.add(Dense(512, input_shape=input_shape, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(256, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(64, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(action_space, activation="linear", kernel_initializer='he_uniform'))
-
     model.compile(loss = "mse",optimizer=Adam(learning_rate=1e-3,  epsilon=0.01), metrics=["accuracy"])
     return model
 
@@ -36,7 +34,7 @@ class DQNAgent():
 
         self.gamma = 0.95
         self.epsilon = 1.0
-        self.epsilon_min = 0.30
+        self.epsilon_min = 0.20
         self.epsilon_decay = 0.995
         self.batch_size = 128
         self.train_start = 1000
@@ -92,7 +90,8 @@ class DQNAgent():
                 target[i][action[i]] = reward[i] + self.gamma * (np.amax(target_next[i]))
 
         # Train the Neural Network with batches
-        self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
+        if self.EPISODES == 1:
+            self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
 
     def train(self):
         for e in range(self.EPISODES):
