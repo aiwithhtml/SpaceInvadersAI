@@ -26,7 +26,7 @@ def OurModel(input_shape, action_space):
 
 class DQNAgent():
     def __init__(self, **kwargs):
-        self.env = gym.make('ALE/SpaceInvaders-v5', render_mode = 'human')
+        self.env = gym.make('ALE/SpaceInvaders-v5')
         self.input_shape = self.env.observation_space.shape
         self.action_space = self.env.action_space.n
         self.EPISODES = 10000000
@@ -53,49 +53,11 @@ class DQNAgent():
         else:
             return np.argmax(self.model.predict(state))
 
-    def replay(self):
-        if len(self.memory) < self.train_start:
-            return
-        # Randomly sample minibatch from the memory
-        minibatch = random.sample(self.memory, min(len(self.memory), self.batch_size))
-
-        state = ((self.batch_size, self.input_shape))
-        next_state = ((self.batch_size, self.input_shape))
-        action, reward, done = [], [], []
-
-        # do this before prediction
-        # for speedup, this could be done on the tensor level
-        # but easier to understand using a loop
-        for i in range(self.batch_size):
-            state = minibatch[i][0]
-            action.append(minibatch[i][1])
-            reward.append(minibatch[i][2])
-            next_state = minibatch[i][3]
-            done.append(minibatch[i][4])
-
-        # do batch prediction to save speed
-
-        target = self.model.predict(state)
-        target_next = self.model.predict(next_state)
-
-        for i in range(self.batch_size):
-            # correction on the Q value for the action used
-            if done[i]:
-                target[i][action[i]] = reward[i]
-            else:
-                # Standard - DQN
-                # DQN chooses the max Q value among next actions
-                # selection and evaluation of action is on the target Q Network
-                # Q_max = max_a' Q_target(s', a')
-                target[i][action[i]] = reward[i] + self.gamma * (np.amax(target_next[i]))
-
-        # Train the Neural Network with batches
-        if self.EPISODES == 1:
-            self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
-
     def train(self):
         for e in range(self.EPISODES):
             state = self.env.reset()
+            target = self.model.predict(state)
+            self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
             state = np.reshape(state, [210, 160, 3])
             done = False
             score = 0
@@ -109,25 +71,19 @@ class DQNAgent():
                 if done:                   
                     print("episode: {}/{}, score: {}, e: {:.2}".format(e, self.EPISODES, score, self.epsilon))
                     self.model.save(MODEL_PATH)
-                    if (score >= 500):
-                        self.model.save('./SpecialSpaceInvadersModel.h5')
-                self.replay()
-                
-                
-
+        
     def test(self):
-        load_model("SpaceInvadersModel.h5")
+        load_model(MODEL_PATH)
         for e in range(self.EPISODES):
             state = self.env.reset()
             state = np.reshape(state, [210,160,3])
             done = False
             i = 0
             while not done:
-                self.env.render()
-                action = np.argmax(self.model.predict(state))
+                action = self.env.action_space.sample()
                 next_state, reward, done, info = self.env.step(action)
                 state = np.reshape(next_state, [210,160,3])
-                i += 1
+                i += reward
                 if done:
                     print("episode: {}/{}, score: {}".format(e, self.EPISODES, i))
                     break
