@@ -30,6 +30,7 @@ class DQNAgent():
         self.input_shape = self.env.observation_space.shape
         self.action_space = self.env.action_space.n
         self.EPISODES = 10000000
+        self.TESTEPISODES = 10
         self.memory = deque(maxlen=2000)
 
         self.gamma = 0.95
@@ -73,20 +74,23 @@ class DQNAgent():
                     self.model.save(MODEL_PATH)
         
     def test(self):
-        load_model(MODEL_PATH)
-        for e in range(self.EPISODES):
+        self.load(MODEL_PATH)
+        print('Loaded model successfully')
+        total = 0
+        for e in range(self.TESTEPISODES):
             state = self.env.reset()
-            state = np.reshape(state, [210,160,3])
+            state = np.reshape(state, [210, 160, 3])
             done = False
-            i = 0
+            score = 0
             while not done:
-                action = self.env.action_space.sample()
-                next_state, reward, done, info = self.env.step(action)
-                state = np.reshape(next_state, [210,160,3])
-                i += reward
+                action = self.act(state)
+                next_state, reward, done, _ = self.env.step(action)
+                next_state = np.reshape(next_state, [210, 160, 3])
+                score += reward
                 if done:
-                    print("episode: {}/{}, score: {}".format(e, self.EPISODES, i))
-                    break
+                    print("Episode: {}/{}, Score: {}".format(e, self.TESTEPISODES, score))
+                    total += score
+        print("Average score: ",total/self.TESTEPISODES)
 
 if __name__ == "__main__":
     agent = DQNAgent()
