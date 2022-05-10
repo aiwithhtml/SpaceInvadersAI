@@ -9,7 +9,7 @@ from tensorflow.python.keras.models import Sequential, load_model
 from tensorflow.python.keras.layers import Dense
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
-MODEL_PATH = './SpaceInvadersModel2.h5'
+MODEL_PATH = './SpaceInvadersModel1.h5'
 
 def OurModel(input_shape, action_space):
     env = gym.make('ALE/SpaceInvaders-v5')
@@ -21,7 +21,7 @@ def OurModel(input_shape, action_space):
     model.add(Dense(256, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(64, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(action_space, activation="linear", kernel_initializer='he_uniform'))
-    model.compile(loss = "mse",optimizer=Adam(learning_rate=1e-3,  epsilon=0.01), metrics=["accuracy"])
+    model.compile(loss = "mse",optimizer=Adam(learning_rate=1e-3,  epsilon=0.001), metrics=["accuracy"])
     return model
 
 class DQNAgent():
@@ -29,14 +29,13 @@ class DQNAgent():
         self.env = gym.make('ALE/SpaceInvaders-v5')
         self.input_shape = self.env.observation_space.shape
         self.action_space = self.env.action_space.n
-        self.EPISODES = 500
-        self.TESTEPISODES = 10
+        self.EPISODES = 10000000
         self.memory = deque(maxlen=2000)
 
         self.gamma = 0.95
         self.epsilon = 1.0
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_min = 0.001
+        self.epsilon_decay = 0.999
         self.batch_size = 128
         self.train_start = 1000
 
@@ -48,19 +47,22 @@ class DQNAgent():
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
-    def act(self, state):
+    def action(self, state):
         if np.random.random() <= self.epsilon:
             return random.randrange(self.action_space)
         else:
             return np.argmax(self.model.predict(state))
 
-    def load(self, name):
-        self.model = load_model(name)
-        
+    def save(self, name):
+        self.model.save(name)
+
     def train(self):
+        total = 0
+        start = 0
         for e in range(self.EPISODES):
             state = self.env.reset()
             target = self.model.predict(state)
+            state = np.reshape(state, [210, 160, 3])
             self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
             done = False
             score = 0
@@ -69,35 +71,41 @@ class DQNAgent():
                 next_state, reward, done, info = self.env.step(action)
                 next_state = np.reshape(next_state, [210, 160, 3])
                 score += reward
-                if score >= 350:
+                if (score >= 200 and score <= 450):
                     reward = 100
+                elif (score >= 451 and score <= 600):
+                    reward = 200
+                elif (score >= 601):
+                    reward = 250
                 else:
                     reward = -100
                 self.remember(state, action, reward, next_state, done)
                 state = next_state
-                if done:                   
-                    print("episode: {}/{}, score: {}, e: {:.2}".format(e, self.EPISODES, score, self.epsilon))
+                if done:
+                    start += 1
+                    total += score
+                    average = total/start
+                    print("Episode: {}/{}, Score: {}, Epsilon: {:.2}, Counting Average: {}".format(e, self.EPISODES, score, self.epsilon, average))
+                    self.model.save('./BasicModel.h5')
+        if(self.EPISODES % 100000 == 0):
+            self.model.save(MODEL_PATH)
         self.model.save(MODEL_PATH)
         
     def test(self):
-        self.load(MODEL_PATH)
-        print('Loaded model successfully')
-        total = 0
-        for e in range(self.TESTEPISODES):
+        load_model(MODEL_PATH)
+        for e in range(self.EPISODES):
             state = self.env.reset()
-            state = np.reshape(state, [210, 160, 3])
+            state = np.reshape(state, [210,160,3])
             done = False
-            score = 0
+            i = 0
             while not done:
-                action = self.act(state)
-                #action = self.env.action_space.sample()
-                next_state, reward, done, _ = self.env.step(action)
-                next_state = np.reshape(next_state, [210, 160, 3])
-                score += reward
+                action = self.env.action_space.sample()
+                next_state, reward, done, info = self.env.step(action)
+                state = np.reshape(next_state, [210,160,3])
+                i += reward
                 if done:
-                    print("Episode: {}/{}, Score: {}".format(e+1, self.TESTEPISODES, score))
-                    total += score
-        print("Average score: ",total/self.TESTEPISODES)
+                    print("episode: {}/{}, score: {}".format(e, self.EPISODES, i))
+                    break
 
 if __name__ == "__main__":
     agent = DQNAgent()
