@@ -6,42 +6,54 @@ import gym
 import numpy as np
 from collections import deque
 from tensorflow.python.keras.models import Sequential, load_model
-from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import Dense, Convolution2D, Flatten
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
-MODEL_PATH = './SpaceInvadersModel.h5'
+# This is where the model will be saved.
+# Change path if necessary.
+
+MODEL_PATH = './SpaceInvadersModel1.h5'
+
+# This is where our main model is. We are
+# using a Sequential model and 4 dense layers
+# to train, and then we compile in order
+# to be able to play it, or train it using fit()
 
 def OurModel(input_shape, action_space):
-    env = gym.make('ALE/SpaceInvaders-v5')
+    env = gym.make('SpaceInvaders-v0')
     input_shape = env.observation_space.shape
     action_space = env.action_space.n
 
     model = Sequential()
     model.add(Dense(512, input_shape=input_shape, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(256, activation="relu", kernel_initializer='he_uniform'))
+    model.add(Dense(128, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(64, activation="relu", kernel_initializer='he_uniform'))
+    model.add(Dense(3, activation="relu", kernel_initializer='he_uniform'))
     model.add(Dense(action_space, activation="linear", kernel_initializer='he_uniform'))
-    model.compile(loss = "mse",optimizer=Adam(learning_rate=1e-3,  epsilon=0.01), metrics=["accuracy"])
+    model.compile(loss = "mse",optimizer=Adam(learning_rate=0.00025,  epsilon=0.01), metrics=["accuracy"])
+    model.summary()
     return model
 
 class DQNAgent():
     def __init__(self, **kwargs):
-        self.env = gym.make('ALE/SpaceInvaders-v5')
+        self.env = gym.make('SpaceInvaders-v0')
         self.input_shape = self.env.observation_space.shape
         self.action_space = self.env.action_space.n
         self.EPISODES = 10000000
-        self.TESTEPISODES = 10
         self.memory = deque(maxlen=2000)
 
-        self.gamma = 0.95
         self.epsilon = 1.0
-        self.epsilon_min = 0.20
-        self.epsilon_decay = 0.995
+        self.epsilon_min = 0.001
+        self.epsilon_decay = 0.999
         self.batch_size = 128
         self.train_start = 1000
 
         self.model = OurModel(input_shape=(self.input_shape,), action_space = self.action_space)
 
+    # In order to train, our model needs
+    # to remember what it did and what to do
+    # or not to do. It does that here.
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
         if len(self.memory) > self.train_start:
@@ -54,30 +66,64 @@ class DQNAgent():
         else:
             return np.argmax(self.model.predict(state))
 
+    # Saves the model depending on a given name
+    
+    def save(self, name):
+        self.model.save(name)
+
+    # Trains the model, saving every iteration.
+    # Also prints out a counting average, which
+    # optimally should increase over time to 
+    # see if it is actually training
+    
+    # Note: Episode starts at 0
+    
     def train(self):
+        total = 0
+        start = 0
         for e in range(self.EPISODES):
             state = self.env.reset()
+            state = np.reshape(state, [1, 210, 160, 3])
             target = self.model.predict(state)
-            self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
-            state = np.reshape(state, [210, 160, 3])
+            self.model.fit(state, target, batch_size=self.batch_size, epochs=1, verbose=0) 
             done = False
             score = 0
             while not done:
-                action = self.env.action_space.sample()
-                next_state, reward, done, info = self.env.step(action)
-                next_state = np.reshape(next_state, [210, 160, 3])
+                action = self.act(state)
+                next_state, reward, done, _ = self.env.step(action)
+                next_state = np.reshape(next_state, [1, 210, 160, 3])
                 score += reward
+                if (score >= 100 and score <= 450):
+                    reward = 100
+                elif (score >= 451 and score <= 600):
+                    reward = 200
+                elif (score >= 601):
+                    reward = 250
+                else:
+                    reward = -20
                 self.remember(state, action, reward, next_state, done)
                 state = next_state
-                if done:                   
-                    print("episode: {}/{}, score: {}, e: {:.2}".format(e, self.EPISODES, score, self.epsilon))
-                    self.model.save(MODEL_PATH)
+                if done:
+                    start += 1
+                    total += score
+                    average = total/start
+                    print("Episode: {}/{}, Score: {}, Epsilon: {:.3f}, Counting Average: {:.2f}".format(e, self.EPISODES, score, self.epsilon, average))
+                    self.model.save('./BasicModel.h5')
+        if(self.EPISODES % 100000 == 0):
+            self.model.save('./IncrementedModel.h5')
+        self.model.save(MODEL_PATH)
         
+
+        
+    # Tests a model for 10 episodes
+    # loads in model using load_model, 
+    # then plays, and when finished, 
+    # it prints the average score.    
+    
     def test(self):
-        self.load(MODEL_PATH)
         print('Loaded model successfully')
         total = 0
-        for e in range(self.TESTEPISODES):
+        for e in range(10000):
             state = self.env.reset()
             state = np.reshape(state, [210, 160, 3])
             done = False
@@ -88,10 +134,12 @@ class DQNAgent():
                 next_state = np.reshape(next_state, [210, 160, 3])
                 score += reward
                 if done:
-                    print("Episode: {}/{}, Score: {}".format(e, self.TESTEPISODES, score))
+                    print("Episode: {}/{}, Score: {}".format(e, 10000, score))
                     total += score
-        print("Average score: ",total/self.TESTEPISODES)
+        print("Average score: ",total/10000)
 
+# This runs either of the functions or both
+# in order to train or test a model.
 if __name__ == "__main__":
     agent = DQNAgent()
     agent.train()
