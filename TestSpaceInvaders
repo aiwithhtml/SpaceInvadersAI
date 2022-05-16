@@ -12,7 +12,7 @@ from tensorflow.python.keras.optimizer_v2.adam import Adam
 # This is where the model will be saved.
 # Change path if necessary.
 
-MODEL_PATH = './SpaceInvadersModel1.h5'
+MODEL_PATH = './SpaceInvadersModel.h5'
 
 # This is where our main model is. We are
 # using a Sequential model and 4 dense layers
@@ -25,13 +25,14 @@ def OurModel(input_shape, action_space):
     action_space = env.action_space.n
 
     model = Sequential()
-    model.add(Dense(512, input_shape=input_shape, activation="relu", kernel_initializer='he_uniform'))
-    model.add(Dense(256, activation="relu", kernel_initializer='he_uniform'))
-    model.add(Dense(128, activation="relu", kernel_initializer='he_uniform'))
-    model.add(Dense(64, activation="relu", kernel_initializer='he_uniform'))
-    model.add(Dense(3, activation="relu", kernel_initializer='he_uniform'))
-    model.add(Dense(action_space, activation="linear", kernel_initializer='he_uniform'))
-    model.compile(loss = "mse",optimizer=Adam(learning_rate=0.00025,  epsilon=0.01), metrics=["accuracy"])
+    model.add(Convolution2D(32, (8,8), strides=(4,4), activation='relu', input_shape=input_shape))
+    model.add(Convolution2D(64, (4,4), strides=(2,2), activation='relu'))
+    model.add(Convolution2D(64, (3,3), activation='relu'))
+    model.add(Flatten())
+    model.add(Dense(512, activation='relu'))
+    model.add(Dense(256, activation='relu'))
+    model.add(Dense(action_space, activation='linear'))
+    model.compile(loss = 'mse',optimizer=Adam(learning_rate=0.00025,  epsilon=0.01), metrics=["accuracy"])
     model.summary()
     return model
 
@@ -43,6 +44,7 @@ class DQNAgent():
         self.EPISODES = 10000000
         self.memory = deque(maxlen=2000)
 
+        self.gamma = 0.95
         self.epsilon = 1.0
         self.epsilon_min = 0.001
         self.epsilon_decay = 0.999
@@ -66,6 +68,45 @@ class DQNAgent():
         else:
             return np.argmax(self.model.predict(state))
 
+    def replay(self):
+        if len(self.memory) < self.train_start:
+            return
+        # Randomly sample minibatch from the memory
+        minibatch = random.sample(self.memory, min(len(self.memory), self.batch_size))
+
+        state = np.zeros((self.batch_size, 210, 160, 3))
+        next_state = np.zeros((self.batch_size, 210, 160, 3))
+        action, reward, done = [], [], []
+
+        # do this before prediction
+        # for speedup, this could be done on the tensor level
+        # but easier to understand using a loop
+        for i in range(self.batch_size):
+            state[i] = minibatch[i][0]
+            action.append(minibatch[i][1])
+            reward.append(minibatch[i][2])
+            next_state[i] = minibatch[i][3]
+            done.append(minibatch[i][4])
+
+        # do batch prediction to save speed
+        target = self.model.predict(state)
+        target_next = self.model.predict(next_state)
+
+        for i in range(self.batch_size):
+            # correction on the Q value for the action used
+            if done[i]:
+                target[i][action[i]] = reward[i]
+            else:
+                # Standard - DQN
+                # DQN chooses the max Q value among next actions
+                # selection and evaluation of action is on the target Q Network
+                # Q_max = max_a' Q_target(s', a')
+                target[i][action[i]] = reward[i] + self.gamma * (np.amax(target_next[i]))
+
+        self.new_model = load_model('./SpaceInvadersModel1.h5') #not necessary if starting training
+        self.new_model.evaluate(state, target)
+        self.new_model.fit(state, target, batch_size=self.batch_size, epochs = 10, verbose=1)
+
     # Saves the model depending on a given name
     
     def save(self, name):
@@ -84,23 +125,13 @@ class DQNAgent():
         for e in range(self.EPISODES):
             state = self.env.reset()
             state = np.reshape(state, [1, 210, 160, 3])
-            target = self.model.predict(state)
-            self.model.fit(state, target, batch_size=self.batch_size, epochs=1, verbose=0) 
             done = False
             score = 0
             while not done:
-                action = self.act(state)
+                action = self.env.action_space.sample()
                 next_state, reward, done, _ = self.env.step(action)
                 next_state = np.reshape(next_state, [1, 210, 160, 3])
                 score += reward
-                if (score >= 100 and score <= 450):
-                    reward = 100
-                elif (score >= 451 and score <= 600):
-                    reward = 200
-                elif (score >= 601):
-                    reward = 250
-                else:
-                    reward = -20
                 self.remember(state, action, reward, next_state, done)
                 state = next_state
                 if done:
@@ -108,12 +139,9 @@ class DQNAgent():
                     total += score
                     average = total/start
                     print("Episode: {}/{}, Score: {}, Epsilon: {:.3f}, Counting Average: {:.2f}".format(e, self.EPISODES, score, self.epsilon, average))
-                    self.model.save('./BasicModel.h5')
-        if(self.EPISODES % 100000 == 0):
-            self.model.save('./IncrementedModel.h5')
-        self.model.save(MODEL_PATH)
-        
-
+                    self.model.save(MODEL_PATH)
+                    break
+            self.replay()
         
     # Tests a model for 10 episodes
     # loads in model using load_model, 
@@ -121,9 +149,10 @@ class DQNAgent():
     # it prints the average score.    
     
     def test(self):
+        self.model.load_weights('./BasicModel.h5')
         print('Loaded model successfully')
         total = 0
-        for e in range(10000):
+        for e in range(100):
             state = self.env.reset()
             state = np.reshape(state, [210, 160, 3])
             done = False
@@ -134,9 +163,9 @@ class DQNAgent():
                 next_state = np.reshape(next_state, [210, 160, 3])
                 score += reward
                 if done:
-                    print("Episode: {}/{}, Score: {}".format(e, 10000, score))
+                    print("Episode: {}/{}, Score: {}".format(e, 100, score))
                     total += score
-        print("Average score: ",total/10000)
+        print("Average score: ",total/100)
 
 # This runs either of the functions or both
 # in order to train or test a model.
