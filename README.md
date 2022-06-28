@@ -7,3 +7,7 @@ This is my project on training a model to play Space Invaders with stable baseli
 
 
 My trained keras model was not exactly great, and required a lot of time to train it. If anybody wants to try, the script I was using is in the main branch, Keras Script is the file name.
+
+Initially, I had used a modified version of that script for the Cartpole environment, and it solved it in about 50000 steps. However, Space Invaders was not going to work with that, and I had to try something different this time. I had begun hearing about something called Stable Baselines 3, the new and updated version of Stable Baselines. This library, which I would highly recommend for Machine Learning, was very convenient, and relatively easy to use. It gives a library of algorithms and ways to use them, as well as detailed documentation. If anybody wants a detailed look at it, here is the link:
+
+https://stable-baselines3.readthedocs.io/en/master/index.html
