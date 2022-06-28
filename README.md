@@ -1,3 +1,1 @@
-This branch has all the code that I used to train models. The Keras Script is my outdated, not great training script. The other is my fully working one that I used to train my model. 
-
-
+This branch has all the code that I used to train models. The Keras Script is my outdated, not great training script. The other is my fully working one that I used to train my model. Generally, for people trying to train I would say that with most computers, to get to 20-40m steps should take about 5 days, but it can be faster or slower depending on your computer. 
