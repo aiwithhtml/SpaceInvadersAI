@@ -20,7 +20,7 @@ Space Invaders is a discrete environment, and there are only a few algorithms in
 
 https://stable-baselines3.readthedocs.io/en/master/guide/algos.html 
 
-And now after training for about 20 million steps, here are a few gifs of our final model! I will include the code to make the gifs in this repository so you can show your friends what you created if you like ;).
+And now after training for about 20 million steps, here are a few gifs of our final model! I will include the code to make the gifs in this repository so you can show your friends what you created if you like ;). The saved model is posted above in the main branch. 
 
 
 ![SpaceInvaders](https://user-images.githubusercontent.com/53868567/176224580-f9252862-5e75-4de2-94dc-f9e99e9b88c3.gif)
