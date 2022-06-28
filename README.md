@@ -6,9 +6,7 @@ in order to install, run commands in order:
 
 pip install gym[all]
 
-pip install keras
-
-pip install tensorflow
+pip install stable-baselines3
 
 pip install gym[accept-roms-license]
 
@@ -18,6 +16,3 @@ In order to train a model, function agent.train() trains your model.
 In order to make the model play, function agent.test() tests your model. 
 
 The saved model is SpaceInvadersModel.h5 for anybody who wishes to skip the training. 
-
-
-![SpaceInvaders](https://user-images.githubusercontent.com/53868567/174585358-2635c9fd-d5be-481a-b7f7-b078d87d5522.gif)
