@@ -19,4 +19,9 @@ https://stable-baselines3.readthedocs.io/en/master/guide/algos.html
 And now after training for about 20 million steps, here are a few gifs of our final model! I will include the code to make the gifs in this repository so you can show your friends what you created if you like ;).
 
 
-SpaceInvaders.gif
+![SpaceInvaders](https://user-images.githubusercontent.com/53868567/176224580-f9252862-5e75-4de2-94dc-f9e99e9b88c3.gif)
+
+![SpaceInvaders](https://user-images.githubusercontent.com/53868567/176224864-06fe3da0-3412-4f3e-aab0-562aed1d3d87.gif)
+
+![SpaceInvaders2](https://user-images.githubusercontent.com/53868567/176224912-c616d091-a1ff-4d95-a901-191e92f3b256.gif)
+
