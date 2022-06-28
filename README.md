@@ -1,7 +1,7 @@
 # SpaceInvadersAI
 Code for teaching an AI how to play Space Invaders with Keras and OpenAI gym. 
 
-This is my project on training a model to play Space Invaders with stable baselines 3 and gym! Initially I used KerasRL and Tensorflow to try and create a model. That process was slow and quite complicated, and in the end, I had a script that could get the average score to about 250, and it would not get reliably higher than that. The average score for a random agent is about 150, and here is an example: 
+This is my project on training a model to play Space Invaders with stable baselines 3 and gym! Initially I used KerasRL and Tensorflow to try and create a model. That process was slow and quite complicated, and in the end, I had a script that could get the average score to about 250, and it would not get reliably higher than that. The average score for a random agent is about 150, and here is an example of a random agent: 
 
 ![space_invaders](https://user-images.githubusercontent.com/53868567/176220892-61a10366-5da4-49b0-a463-a667a4e1f07b.gif)
 
@@ -19,3 +19,4 @@ https://stable-baselines3.readthedocs.io/en/master/guide/algos.html
 And now after training for about 20 million steps, here are a few gifs of our final model! I will include the code to make the gifs in this repository so you can show your friends what you created if you like ;).
 
 
+SpaceInvaders.gif
