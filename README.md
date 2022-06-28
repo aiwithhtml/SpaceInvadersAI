@@ -1,5 +1,6 @@
 # SpaceInvadersAI
 Code for teaching an AI how to play Space Invaders.
+
 https://www.gymlibrary.ml/
 
 For training code, go to the Training Branch. For testing code, go to the Testing Branch. To see how to make an environment that does random actions, go to the Random Actions Branch. 
