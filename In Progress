@@ -1,27 +1,34 @@
-import gym
 from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_atari_env
+from stable_baselines3.common.vec_env import VecFrameStack
+from stable_baselines3.common.callbacks import EvalCallback, BaseCallback
+import os
 
-env = gym.make("ALE/SpaceInvaders-v5")
-model = PPO('MlpPolicy', env, verbose=2)
-env.reset()
-
-class Agent():
+class SaveOnBestTrainingRewardCallback(BaseCallback):
+    def __init__(self, check_freq: int, save_path: str, verbose=1):
+        super(SaveOnBestTrainingRewardCallback, self).__init__(verbose)
+        self.check_freq = check_freq
+        self.save_path = save_path
     
-	def train(self):
-		model.learn(total_timesteps=1000000)
-		model.save('./SI.h5')
+    def _init_callback(self) -> None:
+        if self.save_path is not None:
+            os.makedirs(self.save_path, exist_ok=True)
 
-	def test(self):
-		episodes = 5
-		for ep in range(episodes):
-			obs = env.reset()
-			done = False
-			while not done:
-				action, _states = model.predict(obs)
-				obs, rewards, done, info = env.step(action)
-				print(rewards)
+    def _on_step(self) -> bool:
+        if self.n_calls % self.check_freq == 0:
+            model_path = os.path.join(self.save_path, 'best_model_{}'.format(self.n_calls))
+            self.model.save(model_path)
 
-if __name__ == "__main__":
-    agent = Agent()
-    agent.train()
-    agent.test()
+CHECKPOINT_DIR = './train1/'
+
+callback = SaveOnBestTrainingRewardCallback(check_freq = 114688, save_path=CHECKPOINT_DIR)
+
+env = make_atari_env('ALE/SpaceInvaders-v5', n_envs=8, seed=0)
+env = VecFrameStack(env, n_stack=4)
+
+logdir = "logs"
+
+model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=logdir)
+
+model.learn(50000000, callback=callback)
+model.save('./SpaceInvaders50m')
