@@ -23,7 +23,7 @@ https://stable-baselines3.readthedocs.io/en/master/guide/algos.html
 And now after training for about 20 million steps, here are a few gifs of our final model! I will include the code to make the gifs in this repository so you can show your friends what you created if you like ;). The saved model is posted above in the main branch. On average, this AI gets about 950 (about 6.3 times better than the random agent), which strikes me as better than most beginning human players, as it is almost always getting to the next levels. A person who regularly plays Space Invaders will beat this AI, but on average, it should be better than most beginning players.
 
 
-<img src="[https://your-image-url.type](https://user-images.githubusercontent.com/53868567/176224580-f9252862-5e75-4de2-94dc-f9e99e9b88c3.gif)" width="500" height="500">
+<img src="https://your-image-url.type](https://user-images.githubusercontent.com/53868567/176224580-f9252862-5e75-4de2-94dc-f9e99e9b88c3.gif" width="500" height="500">
 
 <img src="https://user-images.githubusercontent.com/53868567/176224864-06fe3da0-3412-4f3e-aab0-562aed1d3d87.gif" width="500" height="500">
 
