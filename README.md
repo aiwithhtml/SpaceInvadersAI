@@ -27,5 +27,5 @@ And now after training for about 20 million steps, here are a few gifs of our fi
 
 ![SpaceInvaders](https://user-images.githubusercontent.com/53868567/176224864-06fe3da0-3412-4f3e-aab0-562aed1d3d87.gif)
 
-<img src="https://user-images.githubusercontent.com/53868567/176224864-06fe3da0-3412-4f3e-aab0-562aed1d3d87.gif" width="1000" height="1000">
+<img src="https://user-images.githubusercontent.com/53868567/176224864-06fe3da0-3412-4f3e-aab0-562aed1d3d87.gif" width="500" height="500">
 
